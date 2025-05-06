@@ -1,6 +1,10 @@
-#include <iostream>
+// TODO: Temporary
+#include "Window.hpp"
 
 int main()
 {
-    std::cout << "Hello World\n";
+    Graphics::Window window(Graphics::Window::Config(1280, 720, "Graphics"));
+
+    while (!window.CloseRequested())
+        window.PollEvents();
 }
