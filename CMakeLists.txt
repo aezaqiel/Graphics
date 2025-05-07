@@ -12,18 +12,18 @@ add_subdirectory(vendor/spdlog)
 
 add_executable(${PROJECT_NAME}
     src/Main.cpp
-    src/Core.hpp
-    src/Log.hpp
-    src/Log.cpp
-    src/Application.hpp
-    src/Application.cpp
-    src/Window.hpp
-    src/Window.cpp
-    src/KeyCodes.hpp
-    src/Events/Event.hpp
-    src/Events/ApplicationEvent.hpp
-    src/Events/KeyEvent.hpp
-    src/Events/MouseEvent.hpp
+    src/Types.hpp
+    src/Core/Log.hpp
+    src/Core/Log.cpp
+    src/Core/Application.hpp
+    src/Core/Application.cpp
+    src/Core/Window.hpp
+    src/Core/Window.cpp
+    src/Core/KeyCodes.hpp
+    src/Core/Events/Event.hpp
+    src/Core/Events/ApplicationEvent.hpp
+    src/Core/Events/KeyEvent.hpp
+    src/Core/Events/MouseEvent.hpp
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -48,3 +48,11 @@ if(WIN32)
         GLFW_EXPOSE_NATIVE_WIN32
     )
 endif()
+
+target_compile_options(${PROJECT_NAME}
+PRIVATE
+    -Wall
+    -Wextra
+    -Werror
+    -pedantic
+)

@@ -1,5 +1,5 @@
-#include "Log.hpp"
-#include "Application.hpp"
+#include "Core/Log.hpp"
+#include "Core/Application.hpp"
 
 int main()
 {

@@ -44,6 +44,9 @@ namespace Graphics {
         });
 
         glfwSetKeyCallback(m_Window, [](GLFWwindow* window, i32 key, i32 scancode, i32 action, i32 mods) -> void {
+            (void)scancode;
+            (void)mods;
+
             WindowData& data = *reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
             switch (action) {
@@ -72,6 +75,8 @@ namespace Graphics {
         });
 
         glfwSetMouseButtonCallback(m_Window, [](GLFWwindow* window, i32 button, i32 action, i32 mods) -> void {
+            (void)mods;
+
             WindowData& data = *reinterpret_cast<WindowData*>(glfwGetWindowUserPointer(window));
 
             switch (action) {

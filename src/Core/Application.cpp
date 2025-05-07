@@ -29,14 +29,15 @@ namespace Graphics {
     {
         EventDispatcher dispatcher(event);
 
-        dispatcher.Dispatch<WindowCloseEvent>([&](WindowCloseEvent& e) -> bool {
+        dispatcher.Dispatch<WindowCloseEvent>([&](WindowCloseEvent&) -> bool {
             m_Running = false;
             return false;
         });
 
         dispatcher.Dispatch<WindowResizeEvent>([&](WindowResizeEvent& e) -> bool {
-            const u32 width = e.GetWidth();
-            const u32 height = e.GetHeight();
+            (void)e;
+            // const u32 width = e.GetWidth();
+            // const u32 height = e.GetHeight();
 
             // TODO: renderer resize
             return false;

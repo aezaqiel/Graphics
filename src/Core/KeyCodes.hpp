@@ -2,7 +2,7 @@
 
 #include <ostream>
 
-#include "Core.hpp"
+#include "Types.hpp"
 
 namespace Graphics {
 
