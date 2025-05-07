@@ -5,7 +5,7 @@
 #include <ostream>
 #include <concepts>
 
-#include "Core.hpp"
+#include "Types.hpp"
 
 #define BIT(x) (1 << x)
 

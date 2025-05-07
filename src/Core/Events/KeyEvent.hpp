@@ -3,7 +3,7 @@
 #include <sstream>
 
 #include "Event.hpp"
-#include "KeyCodes.hpp"
+#include "Core/KeyCodes.hpp"
 
 namespace Graphics {
 
