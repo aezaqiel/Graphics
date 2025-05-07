@@ -35,7 +35,6 @@ namespace Graphics {
         void SetEventCallback(const EventCallbackFn& callback) { m_Data.EventCallback = callback; }
 
         void PollEvents();
-        bool CloseRequested();
     
     private:
         struct WindowData

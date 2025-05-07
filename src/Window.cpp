@@ -122,9 +122,4 @@ namespace Graphics {
         glfwPollEvents();
     }
 
-    bool Window::CloseRequested()
-    {
-        return glfwWindowShouldClose(m_Window);
-    }
-
 }

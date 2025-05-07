@@ -12,6 +12,8 @@ add_subdirectory(vendor/glfw)
 add_executable(${PROJECT_NAME}
     src/Main.cpp
     src/Core.hpp
+    src/Application.hpp
+    src/Application.cpp
     src/Window.hpp
     src/Window.cpp
     src/Events/Event.hpp
