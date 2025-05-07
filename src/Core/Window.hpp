@@ -31,6 +31,7 @@ namespace Graphics {
 
         inline i32 Width() const { return m_Data.Width; }
         inline i32 Height() const { return m_Data.Height; }
+        inline void* GetNative() const { return m_Window; }
 
         void SetEventCallback(const EventCallbackFn& callback) { m_Data.EventCallback = callback; }
 

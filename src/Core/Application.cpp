@@ -8,8 +8,15 @@ namespace Graphics {
 
     Application::Application()
     {
+        if (s_Instance != nullptr) {
+            LOG_ERROR("An instance of application exists");
+            return;
+        } else { s_Instance = this; }
+
         m_Window = std::make_unique<Window>(Window::Config(1280, 720, "Graphics"));
         m_Window->SetEventCallback(std::bind(&Application::EventHandler, this, std::placeholders::_1));
+
+        m_Renderer = std::make_unique<Renderer>();
     }
 
     void Application::Run()
@@ -20,7 +27,7 @@ namespace Graphics {
             m_Window->PollEvents();
 
             if (!m_Minimized) {
-                // Render
+                m_Renderer->Render(0.0f);
             }
         }
     }
@@ -36,10 +43,11 @@ namespace Graphics {
 
         dispatcher.Dispatch<WindowResizeEvent>([&](WindowResizeEvent& e) -> bool {
             (void)e;
-            // const u32 width = e.GetWidth();
-            // const u32 height = e.GetHeight();
+            const u32 width = e.GetWidth();
+            const u32 height = e.GetHeight();
 
-            // TODO: renderer resize
+            m_Renderer->Resize(width, height);
+
             return false;
         });
 

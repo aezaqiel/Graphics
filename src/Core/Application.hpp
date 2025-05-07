@@ -4,6 +4,7 @@
 
 #include "Window.hpp"
 #include "Events/Event.hpp"
+#include "Renderer/Renderer.hpp"
 
 namespace Graphics {
 
@@ -14,6 +15,9 @@ namespace Graphics {
         ~Application() = default;
 
         void Run();
+
+        inline Window& GetWindow() { return *m_Window; }
+        inline static Application& GetInstance() { return *s_Instance; }
     
     private:
         void EventHandler(Event& event);
@@ -23,6 +27,10 @@ namespace Graphics {
         bool m_Minimized { false };
 
         std::unique_ptr<Window> m_Window;
+        std::unique_ptr<Renderer> m_Renderer;
+
+    private:
+        inline static Application* s_Instance { nullptr };
     };
 
 }

@@ -13,6 +13,7 @@ add_subdirectory(vendor/spdlog)
 add_executable(${PROJECT_NAME}
     src/Main.cpp
     src/Types.hpp
+
     src/Core/Log.hpp
     src/Core/Log.cpp
     src/Core/Application.hpp
@@ -24,6 +25,9 @@ add_executable(${PROJECT_NAME}
     src/Core/Events/ApplicationEvent.hpp
     src/Core/Events/KeyEvent.hpp
     src/Core/Events/MouseEvent.hpp
+
+    src/Renderer/Renderer.hpp
+    src/Renderer/Renderer.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
