@@ -8,6 +8,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_subdirectory(vendor/glfw)
+add_subdirectory(vendor/spdlog)
 
 add_executable(${PROJECT_NAME}
     src/Main.cpp
@@ -30,6 +31,7 @@ PRIVATE
 target_link_libraries(${PROJECT_NAME}
 PRIVATE
     glfw
+    spdlog
 )
 
 target_compile_definitions(${PROJECT_NAME}
