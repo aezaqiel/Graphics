@@ -3,6 +3,7 @@
 #include <string>
 #include <functional>
 #include <ostream>
+#include <concepts>
 
 #include "Core.hpp"
 
@@ -39,21 +40,32 @@ namespace Graphics {
 	public:
 		bool Handled = false;
 
-		virtual ~Event() {}
+		virtual ~Event() = default;
 		virtual EventType GetEventType() const = 0;
 		virtual const char* GetName() const = 0;
 		virtual i32 GetCategoryFlags() const = 0;
 		virtual std::string ToString() const { return GetName(); }
 
-		inline bool IsInCategory(EventCategory category)
+		inline bool IsInCategory(EventCategory category) const
 		{
 			return GetCategoryFlags() & category;
 		}
 	};
 
+	template<typename T>
+	concept IsEvent = requires(T e)
+	{
+		{ T::GetStaticType() } -> std::same_as<EventType>;
+		{ e.GetEventType() } -> std::same_as<EventType>;
+		{ e.GetName() } -> std::convertible_to<const char*>;
+		{ e.GetCategoryFlags() } -> std::convertible_to<i32>;
+		{ e.ToString() } -> std::convertible_to<std::string>;
+		requires std::derived_from<T, Event>;
+	};
+
 	class EventDispatcher
 	{
-		template<typename T>
+		template<IsEvent T>
 		using EventFn = std::function<bool(T&)>;
 
 	public:
@@ -62,12 +74,12 @@ namespace Graphics {
 		{
 		}
 
-		template<typename T>
+		template<IsEvent T>
 		bool Dispatch(EventFn<T> func)
 		{
 			if (m_Event.GetEventType() == T::GetStaticType() && !m_Event.Handled)
 			{
-				m_Event.Handled = func(*(T*)&m_Event);
+				m_Event.Handled = func(static_cast<T&>(m_Event));
 				return true;
 			}
 			return false;
