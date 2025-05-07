@@ -7,8 +7,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "" FORCE)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(WIN32)
+    set(VOLK_STATIC_DEFINES VK_USE_PLATFORM_WIN32_KHR)
+endif()
+
 add_subdirectory(vendor/glfw)
 add_subdirectory(vendor/spdlog)
+add_subdirectory(vendor/volk)
 
 add_executable(${PROJECT_NAME}
     src/Main.cpp
@@ -28,6 +33,9 @@ add_executable(${PROJECT_NAME}
 
     src/Renderer/Renderer.hpp
     src/Renderer/Renderer.cpp
+    src/Renderer/Vulkan/VulkanBase.hpp
+    src/Renderer/Vulkan/VulkanInstance.hpp
+    src/Renderer/Vulkan/VulkanInstance.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -39,6 +47,7 @@ target_link_libraries(${PROJECT_NAME}
 PRIVATE
     glfw
     spdlog
+    volk
 )
 
 target_compile_definitions(${PROJECT_NAME}

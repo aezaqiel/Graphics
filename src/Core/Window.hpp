@@ -31,6 +31,7 @@ namespace Graphics {
 
         inline i32 Width() const { return m_Data.Width; }
         inline i32 Height() const { return m_Data.Height; }
+        inline std::string Title() const { return m_Data.Title; }
         inline void* GetNative() const { return m_Window; }
 
         void SetEventCallback(const EventCallbackFn& callback) { m_Data.EventCallback = callback; }
@@ -42,6 +43,7 @@ namespace Graphics {
         {
             i32 Width { 0 };
             i32 Height { 0 };
+            std::string Title;
             EventCallbackFn EventCallback;
         };
 

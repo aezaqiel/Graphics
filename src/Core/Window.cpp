@@ -14,6 +14,7 @@ namespace Graphics {
     {
         m_Data.Width = config.Width;
         m_Data.Height = config.Height;
+        m_Data.Title = config.Title;
 
         glfwSetErrorCallback([](i32 code, const char* desc) -> void {
             LOG_ERROR("GLFW Error {}: {}", code, desc);
@@ -23,7 +24,7 @@ namespace Graphics {
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-        m_Window = glfwCreateWindow(m_Data.Width, m_Data.Height, config.Title.c_str(), nullptr, nullptr);
+        m_Window = glfwCreateWindow(m_Data.Width, m_Data.Height, m_Data.Title.c_str(), nullptr, nullptr);
 
         glfwSetWindowUserPointer(m_Window, &m_Data);
 
