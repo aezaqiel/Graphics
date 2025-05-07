@@ -1,10 +1,9 @@
 #include "Window.hpp"
 
-#include <iostream>
-
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
+#include "Log.hpp"
 #include "Events/ApplicationEvent.hpp"
 #include "Events/KeyEvent.hpp"
 #include "Events/MouseEvent.hpp"
@@ -17,7 +16,7 @@ namespace Graphics {
         m_Data.Height = config.Height;
 
         glfwSetErrorCallback([](i32 code, const char* desc) -> void {
-            std::cerr << "GLFW Error " << code << ": " << desc << std::endl;
+            LOG_ERROR("GLFW Error {}: {}", code, desc);
         });
 
         glfwInit();
@@ -61,7 +60,7 @@ namespace Graphics {
                     data.EventCallback(event);
                 } break;
                 default:
-                    std::cerr << "Unknown key action " << action << std::endl;
+                    LOG_ERROR("Unknown key action {}", action);
             }
         });
 
@@ -85,7 +84,7 @@ namespace Graphics {
                     data.EventCallback(event);
                 } break;
                 default:
-                    std::cerr << "Unknown mouse button action " << action << std::endl;
+                    LOG_ERROR("Unknown mouse button action {}", action);
             }
         });
 

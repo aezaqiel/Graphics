@@ -13,6 +13,8 @@ add_subdirectory(vendor/spdlog)
 add_executable(${PROJECT_NAME}
     src/Main.cpp
     src/Core.hpp
+    src/Log.hpp
+    src/Log.cpp
     src/Application.hpp
     src/Application.cpp
     src/Window.hpp

@@ -1,7 +1,6 @@
 #include "Application.hpp"
 
-#include <iostream>
-
+#include "Log.hpp"
 #include "Window.hpp"
 #include "Events/ApplicationEvent.hpp"
 
@@ -48,7 +47,7 @@ namespace Graphics {
             return false;
         });
 
-        std::clog << event << std::endl;
+        LOG_TRACE("{}", event.ToString());
     }
 
 }
