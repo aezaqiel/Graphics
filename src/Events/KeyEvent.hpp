@@ -3,27 +3,28 @@
 #include <sstream>
 
 #include "Event.hpp"
+#include "KeyCodes.hpp"
 
 namespace Graphics {
 
     class KeyEvent : public Event
 	{
 	public:
-		inline i32 GetKeyCode() const { return m_KeyCode; }
+		inline KeyCode GetKeyCode() const { return m_KeyCode; }
 
 		EVENT_CLASS_CATEGORY(EventCategoryKeyboard | EventCategoryInput)
 
 	protected:
-		KeyEvent(i32 keycode)
+		KeyEvent(KeyCode keycode)
 			: m_KeyCode(keycode) {}
 
-		i32 m_KeyCode;
+		KeyCode m_KeyCode;
 	};
 
 	class KeyPressedEvent : public KeyEvent
 	{
 	public:
-		KeyPressedEvent(i32 keycode, i32 repeatCount)
+		KeyPressedEvent(KeyCode keycode, i32 repeatCount)
 			: KeyEvent(keycode), m_RepeatCount(repeatCount) {}
 
 		inline i32 GetRepeatCount() const { return m_RepeatCount; }
@@ -44,7 +45,7 @@ namespace Graphics {
 	class KeyReleasedEvent : public KeyEvent
 	{
 	public:
-		KeyReleasedEvent(i32 keycode)
+		KeyReleasedEvent(KeyCode keycode)
 			: KeyEvent(keycode) {}
 
 		std::string ToString() const override
@@ -60,7 +61,7 @@ namespace Graphics {
 	class KeyTypedEvent : public KeyEvent
 	{
 	public:
-		KeyTypedEvent(i32 keycode)
+		KeyTypedEvent(KeyCode keycode)
 			: KeyEvent(keycode) {}
 
 		std::string ToString() const override

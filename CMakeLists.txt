@@ -19,6 +19,7 @@ add_executable(${PROJECT_NAME}
     src/Application.cpp
     src/Window.hpp
     src/Window.cpp
+    src/KeyCodes.hpp
     src/Events/Event.hpp
     src/Events/ApplicationEvent.hpp
     src/Events/KeyEvent.hpp

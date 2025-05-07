@@ -3,6 +3,7 @@
 #include <sstream>
 
 #include "Event.hpp"
+#include "KeyCodes.hpp"
 
 namespace Graphics {
 
@@ -55,21 +56,21 @@ namespace Graphics {
 	class MouseButtonEvent : public Event
 	{
 	public:
-		inline i32 GetMouseButton() const { return m_Button; }
+		inline MouseButton GetMouseButton() const { return m_Button; }
 
 		EVENT_CLASS_CATEGORY(EventCategoryMouse | EventCategoryInput)
 
 	protected:
-		MouseButtonEvent(i32 button)
+		MouseButtonEvent(MouseButton button)
 			: m_Button(button) {}
 
-		i32 m_Button;
+		MouseButton m_Button;
 	};
 
 	class MouseButtonPressedEvent : public MouseButtonEvent
 	{
 	public:
-		MouseButtonPressedEvent(i32 button)
+		MouseButtonPressedEvent(MouseButton button)
 			: MouseButtonEvent(button) {}
 
 		std::string ToString() const override
@@ -85,7 +86,7 @@ namespace Graphics {
 	class MouseButtonReleasedEvent : public MouseButtonEvent
 	{
 	public:
-		MouseButtonReleasedEvent(i32 button)
+		MouseButtonReleasedEvent(MouseButton button)
 			: MouseButtonEvent(button) {}
 
 		std::string ToString() const override
@@ -101,7 +102,7 @@ namespace Graphics {
 	class MouseButtonDownEvent : public MouseButtonEvent
 	{
 	public:
-		MouseButtonDownEvent(i32 button)
+		MouseButtonDownEvent(MouseButton button)
 			: MouseButtonEvent(button)
 		{
 		}
