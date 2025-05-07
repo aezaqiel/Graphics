@@ -14,6 +14,10 @@ add_executable(${PROJECT_NAME}
     src/Core.hpp
     src/Window.hpp
     src/Window.cpp
+    src/Events/Event.hpp
+    src/Events/ApplicationEvent.hpp
+    src/Events/KeyEvent.hpp
+    src/Events/MouseEvent.hpp
 )
 
 target_include_directories(${PROJECT_NAME}
