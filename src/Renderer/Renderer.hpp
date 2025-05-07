@@ -2,8 +2,6 @@
 
 #include "Types.hpp"
 
-#include "Vulkan/VulkanInstance.hpp"
-
 namespace Graphics {
 
     class Renderer
@@ -16,7 +14,6 @@ namespace Graphics {
         void Resize(u32 width, u32 height);
 
     private:
-        VulkanInstance m_Instance;
     };
 
 }
