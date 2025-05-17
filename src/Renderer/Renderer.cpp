@@ -1,6 +1,8 @@
 #include "Renderer.hpp"
 
 #include <sstream>
+#include <vector>
+#include <set>
 
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
@@ -105,47 +107,6 @@ namespace Graphics {
 #endif
     }
 
-    Renderer::QueueFamilyIndex Renderer::FindQueueFamilies(VkPhysicalDevice device)
-    {
-        QueueFamilyIndex indices;
-
-        u32 count = 0;
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &count, nullptr);
-        std::vector<VkQueueFamilyProperties> queueFamilies(count);
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &count, queueFamilies.data());
-
-        i32 i = 0;
-        for (auto& family : queueFamilies)
-        {
-            if (family.queueFlags & VK_QUEUE_GRAPHICS_BIT)
-                indices.Graphics = i;
-
-            VkBool32 supported = VK_FALSE;
-            vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_Surface, &supported);
-
-            if (supported == VK_TRUE)
-                indices.Present = i;
-
-            i++;
-        }
-
-        return indices;
-    }
-
-    bool Renderer::PhysicalDeviceSuitable(VkPhysicalDevice device)
-    {
-        VkPhysicalDeviceProperties props;
-        vkGetPhysicalDeviceProperties(device, &props);
-
-        if (props.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
-            return false;
-        
-        if (!FindQueueFamilies(device).Complete())
-            return false;
-
-        return true;
-    }
-
     void Renderer::PickPhysicalDevice()
     {
         u32 count = 0;
@@ -155,41 +116,65 @@ namespace Graphics {
 
         m_PhysicalDevice = VK_NULL_HANDLE;
 
-        for (auto& device : devices) {
-            if (PhysicalDeviceSuitable(device)) {
-                m_PhysicalDevice = device;
-                break;
+        for (const auto& device : devices) {
+            VkPhysicalDeviceProperties props;
+            vkGetPhysicalDeviceProperties(device, &props);
+
+            if (props.deviceType != VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+                continue;
+
+            m_GraphicQueue.Index.reset();
+            m_PresentQueue.Index.reset();
+
+            u32 queueFamilyCount = 0;
+            vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+            std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+            vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
+            u32 idx = 0;
+            for (const auto& family : queueFamilies) {
+                if (family.queueFlags & VK_QUEUE_GRAPHICS_BIT)
+                    m_GraphicQueue.Index = idx;
+
+                VkBool32 presentSupport = VK_FALSE;
+                vkGetPhysicalDeviceSurfaceSupportKHR(device, idx, m_Surface, &presentSupport);
+
+                if (presentSupport == VK_TRUE)
+                    m_PresentQueue.Index = idx;
+
+                idx++;
             }
+
+            if ((!m_GraphicQueue.Index.has_value()) && (!m_GraphicQueue.Index.has_value()))
+                continue;
+
+            m_PhysicalDevice = device;
+            LOG_INFO("Physical device: {}", props.deviceName);
+
+            break;
         }
 
-        if (m_PhysicalDevice == VK_NULL_HANDLE) {
-            LOG_ERROR("No suitable physical device found");
-        } else {
-            m_QueueFamilyIndex = FindQueueFamilies(m_PhysicalDevice);
-        }
     }
 
     void Renderer::CreateDevice()
     {
         f32 priority = 1.0f;
 
-        std::vector<VkDeviceQueueCreateInfo> queueCreateInfos(m_QueueFamilyIndex.Count());
-        for (u32 i = 0; i < queueCreateInfos.size(); i++) {
-            if (m_QueueFamilyIndex[i] < 0)
-                i++;
+        std::set<u32> indices = { m_GraphicQueue.Index.value(), m_PresentQueue.Index.value() };
+        std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 
-            queueCreateInfos[i] = {
-                .sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
-                .pNext = nullptr,
-                .flags = 0,
-                .queueFamilyIndex = static_cast<u32>(m_QueueFamilyIndex[i]),
-                .queueCount = 1,
-                .pQueuePriorities = &priority
-            };
+        for (u32 index : indices) {
+            queueCreateInfos.push_back({
+				.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO,
+				.pNext = nullptr,
+				.flags = 0,
+				.queueFamilyIndex = index,
+				.queueCount = 1,
+				.pQueuePriorities = &priority
+            });
         }
 
-        VkPhysicalDeviceFeatures features;
-        memset(&features, 0, sizeof(VkPhysicalDeviceFeatures));
+        VkPhysicalDeviceFeatures features {};
 
         std::vector<const char*> extensions;
 
@@ -208,8 +193,8 @@ namespace Graphics {
         VK_CHECK(vkCreateDevice(m_PhysicalDevice, &createInfo, nullptr, &m_Device));
         volkLoadDevice(m_Device);
 
-        vkGetDeviceQueue(m_Device, m_QueueFamilyIndex.Graphics, 0, &m_GraphicsQueue);
-        vkGetDeviceQueue(m_Device, m_QueueFamilyIndex.Present, 0, &m_PresentQueue);
+        vkGetDeviceQueue(m_Device, m_GraphicQueue.Index.value(), 0, &m_GraphicQueue.Queue);
+        vkGetDeviceQueue(m_Device, m_PresentQueue.Index.value(), 0, &m_PresentQueue.Queue);
     }
 
     VkBool32 DebugMessengerCallback(

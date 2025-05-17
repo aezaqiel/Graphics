@@ -58,11 +58,3 @@ if(WIN32)
         GLFW_EXPOSE_NATIVE_WIN32
     )
 endif()
-
-target_compile_options(${PROJECT_NAME}
-PRIVATE
-    -Wall
-    -Wextra
-    -Werror
-    -pedantic
-)

@@ -56,7 +56,7 @@ namespace Graphics {
             return false;
         });
 
-        LOG_TRACE("{}", event.ToString());
+        //LOG_TRACE("{}", event.ToString());
     }
 
 }
