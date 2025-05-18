@@ -16,7 +16,7 @@ namespace Graphics {
     class Renderer
     {
     public:
-        Renderer(const std::shared_ptr<Window> window);
+        Renderer(const std::shared_ptr<Window>& window);
         ~Renderer();
 
         void Render(f32 dt);

@@ -19,7 +19,7 @@ namespace Graphics {
         void*                                            pUserData
     );
 
-    Renderer::Renderer(const std::shared_ptr<Window> window)
+    Renderer::Renderer(const std::shared_ptr<Window>& window)
         : m_Window(window)
     {
         VK_CHECK(volkInitialize());
