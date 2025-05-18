@@ -13,10 +13,10 @@ namespace Graphics {
             return;
         } else { s_Instance = this; }
 
-        m_Window = std::make_unique<Window>(Window::Config(1280, 720, "Graphics"));
+        m_Window = std::make_shared<Window>(Window::Config(1280, 720, "Graphics"));
         m_Window->SetEventCallback(std::bind(&Application::EventHandler, this, std::placeholders::_1));
 
-        m_Renderer = std::make_unique<Renderer>();
+        m_Renderer = std::make_unique<Renderer>(m_Window);
     }
 
     void Application::Run()
@@ -43,10 +43,7 @@ namespace Graphics {
 
         dispatcher.Dispatch<WindowResizeEvent>([&](WindowResizeEvent& e) -> bool {
             (void)e;
-            const u32 width = e.GetWidth();
-            const u32 height = e.GetHeight();
-
-            m_Renderer->Resize(width, height);
+            m_Renderer->Resize();
 
             return false;
         });
