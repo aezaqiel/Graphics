@@ -14,6 +14,7 @@ endif()
 add_subdirectory(vendor/glfw)
 add_subdirectory(vendor/spdlog)
 add_subdirectory(vendor/volk)
+add_subdirectory(vendor/glm)
 
 add_executable(${PROJECT_NAME}
     src/Main.cpp
@@ -45,6 +46,7 @@ PRIVATE
     glfw
     spdlog
     volk
+    glm
 )
 
 target_compile_definitions(${PROJECT_NAME}
