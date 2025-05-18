@@ -136,6 +136,9 @@ namespace Graphics {
             return;
         }
 
+        // TODO: fix validation error -> 1 semaphore per image?
+        vkDeviceWaitIdle(m_Device);
+
         m_FrameIndex = (m_FrameIndex + 1) % s_FrameInFlight;
     }
 

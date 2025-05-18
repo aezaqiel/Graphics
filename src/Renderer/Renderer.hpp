@@ -73,7 +73,7 @@ namespace Graphics {
         std::shared_ptr<Window> m_Window;
 
         inline static VkInstance s_Instance { VK_NULL_HANDLE };
-        inline static constexpr usize s_FrameInFlight { 3 };
+        inline static constexpr usize s_FrameInFlight { 2 };
 
         usize m_FrameIndex { 0 };
 
