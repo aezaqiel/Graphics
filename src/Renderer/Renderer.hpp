@@ -41,13 +41,17 @@ namespace Graphics {
 
         void CreateCommandPool();
 
-        u32 FindMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
         void CreateVertexBuffer();
+        void CreateIndexBuffer();
 
         void AllocateCommandBuffers();
         void RecordCommandBuffer(VkCommandBuffer commandBuffer, u32 imageIndex);
 
         void CreateSyncObjects();
+
+        u32 FindMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
+        void CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+        void CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 
     private:
 
@@ -132,6 +136,10 @@ namespace Graphics {
         std::vector<Vertex> m_Vertices;
         VkBuffer m_VertexBuffer;
         VkDeviceMemory m_VertexBufferMemory;
+
+        std::vector<u16> m_Indices;
+        VkBuffer m_IndexBuffer;
+        VkDeviceMemory m_IndexBufferMemory;
 
         VkCommandPool m_CommandPool;
         std::array<VkCommandBuffer, s_FrameInFlight> m_CommandBuffers;

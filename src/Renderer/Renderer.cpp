@@ -44,11 +44,16 @@ namespace Graphics {
         CreateCommandPool();
 
         m_Vertices = {
-            {{ 0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f }},
-            {{ 0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f }},
-            {{-0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f }}
+            {{-0.5f, -0.5f }, { 1.0f, 0.0f, 0.0f }},
+            {{ 0.5f, -0.5f }, { 0.0f, 1.0f, 0.0f }},
+            {{ 0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f }},
+            {{-0.5f,  0.5f }, { 1.0f, 1.0f, 1.0f }}
         };
+
+        m_Indices = { 0, 1, 2, 2, 3, 0 };
+
         CreateVertexBuffer();
+        CreateIndexBuffer();
 
         AllocateCommandBuffers();
 
@@ -64,6 +69,9 @@ namespace Graphics {
 			vkDestroySemaphore(m_Device, m_RenderFinishedSemphores[i], nullptr);
 			vkDestroySemaphore(m_Device, m_ImageAvailableSemaphores[i], nullptr);
         }
+
+        vkDestroyBuffer(m_Device, m_IndexBuffer, nullptr);
+        vkFreeMemory(m_Device, m_IndexBufferMemory, nullptr);
 
         vkDestroyBuffer(m_Device, m_VertexBuffer, nullptr);
         vkFreeMemory(m_Device, m_VertexBufferMemory, nullptr);
@@ -725,49 +733,46 @@ namespace Graphics {
 		VK_CHECK(vkCreateCommandPool(m_Device, &createInfo, nullptr, &m_CommandPool));
     }
 
-    u32 Renderer::FindMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties)
-    {
-        VkPhysicalDeviceMemoryProperties memProperties;
-        vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &memProperties);
-
-        for (u32 i = 0; i < memProperties.memoryTypeCount; ++i) {
-            if ((typeFilter & (1 << i)) && ((memProperties.memoryTypes[i].propertyFlags & properties) == properties)) {
-                return i;
-            }
-        }
-
-        return -1;
-    }
-
     void Renderer::CreateVertexBuffer()
     {
-        VkBufferCreateInfo createInfo;
-        createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-        createInfo.pNext = nullptr;
-        createInfo.flags = 0;
-        createInfo.size = sizeof(m_Vertices[0]) * m_Vertices.size();
-        createInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-        createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        VkDeviceSize bufferSize = sizeof(m_Vertices[0]) * m_Vertices.size();
 
-        VK_CHECK(vkCreateBuffer(m_Device, &createInfo, nullptr, &m_VertexBuffer));
-
-        VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(m_Device, m_VertexBuffer, &memRequirements);
-
-        VkMemoryAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocInfo.pNext = nullptr;
-        allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-
-        VK_CHECK(vkAllocateMemory(m_Device, &allocInfo, nullptr, &m_VertexBufferMemory));
-
-        vkBindBufferMemory(m_Device, m_VertexBuffer, m_VertexBufferMemory, 0);
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
         void* data;
-        vkMapMemory(m_Device, m_VertexBufferMemory, 0, createInfo.size, 0, &data);
-        memcpy(data, m_Vertices.data(), createInfo.size);
-        vkUnmapMemory(m_Device, m_VertexBufferMemory);
+        vkMapMemory(m_Device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        memcpy(data, m_Vertices.data(), bufferSize);
+        vkUnmapMemory(m_Device, stagingBufferMemory);
+
+        CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_VertexBuffer, m_VertexBufferMemory);
+
+        CopyBuffer(stagingBuffer, m_VertexBuffer, bufferSize);
+
+        vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
+        vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
+    }
+
+    void Renderer::CreateIndexBuffer()
+    {
+        VkDeviceSize bufferSize = sizeof(m_Indices[0]) * m_Indices.size();
+
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+        void* data;
+        vkMapMemory(m_Device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        memcpy(data, m_Indices.data(), bufferSize);
+        vkUnmapMemory(m_Device, stagingBufferMemory);
+
+        CreateBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_IndexBuffer, m_IndexBufferMemory);
+
+        CopyBuffer(stagingBuffer, m_IndexBuffer, bufferSize);
+
+        vkDestroyBuffer(m_Device, stagingBuffer, nullptr);
+        vkFreeMemory(m_Device, stagingBufferMemory, nullptr);
     }
 
     void Renderer::AllocateCommandBuffers()
@@ -812,6 +817,7 @@ namespace Graphics {
         VkBuffer vertexBuffers[] = { m_VertexBuffer };
         VkDeviceSize offsets[] = { 0 };
         vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+        vkCmdBindIndexBuffer(commandBuffer, m_IndexBuffer, 0, VK_INDEX_TYPE_UINT16);
 
 		VkViewport viewport;
 		viewport.x = 0.0f;
@@ -829,7 +835,8 @@ namespace Graphics {
 
 		vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-		vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+		// vkCmdDraw(commandBuffer, 3, 1, 0, 0);
+        vkCmdDrawIndexed(commandBuffer, m_Indices.size(), 1, 0, 0, 0);
 
 		vkCmdEndRenderPass(commandBuffer);
 		VK_CHECK(vkEndCommandBuffer(commandBuffer));
@@ -852,6 +859,75 @@ namespace Graphics {
 			VK_CHECK(vkCreateSemaphore(m_Device, &semaphoreInfo, nullptr, &m_RenderFinishedSemphores[i]));
 			VK_CHECK(vkCreateFence(m_Device, &fenceInfo, nullptr, &m_InFlightFences[i]));
 		}
+    }
+
+    u32 Renderer::FindMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties)
+    {
+        VkPhysicalDeviceMemoryProperties memProperties;
+        vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &memProperties);
+
+        for (u32 i = 0; i < memProperties.memoryTypeCount; ++i) {
+            if ((typeFilter & (1 << i)) && ((memProperties.memoryTypes[i].propertyFlags & properties) == properties)) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    void Renderer::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
+    {
+        VkBufferCreateInfo createInfo = { VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO };
+        createInfo.size = size;
+        createInfo.usage = usage;
+        createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        VK_CHECK(vkCreateBuffer(m_Device, &createInfo, nullptr, &buffer));
+
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(m_Device, buffer, &memRequirements);
+
+        VkMemoryAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO };
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, properties);
+
+        VK_CHECK(vkAllocateMemory(m_Device, &allocInfo, nullptr, &bufferMemory));
+
+        vkBindBufferMemory(m_Device, buffer, bufferMemory, 0);
+    }
+
+    void Renderer::CopyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
+    {
+        VkCommandBufferAllocateInfo allocInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO };
+        allocInfo.commandPool = m_CommandPool;
+        allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        allocInfo.commandBufferCount = 1;
+
+        VkCommandBuffer commandBuffer;
+        vkAllocateCommandBuffers(m_Device, &allocInfo, &commandBuffer);
+
+        VkCommandBufferBeginInfo beginInfo = { VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO };
+        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+        vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+        VkBufferCopy copyRegion {};
+        copyRegion.srcOffset = 0;
+        copyRegion.dstOffset = 0;
+        copyRegion.size = size;
+
+        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+        vkEndCommandBuffer(commandBuffer);
+
+        VkSubmitInfo submitInfo = { VK_STRUCTURE_TYPE_SUBMIT_INFO };
+        submitInfo.commandBufferCount = 1;
+        submitInfo.pCommandBuffers = &commandBuffer;
+
+        vkQueueSubmit(m_GraphicQueue.Queue, 1, &submitInfo, VK_NULL_HANDLE);
+        vkQueueWaitIdle(m_GraphicQueue.Queue);
+
+        vkFreeCommandBuffers(m_Device, m_CommandPool, 1, &commandBuffer);
     }
 
     VkBool32 DebugMessengerCallback(
