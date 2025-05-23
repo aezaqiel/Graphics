@@ -6,9 +6,9 @@
 #include <array>
 
 #include <volk.h>
+#include <glm/glm.hpp>
 
 #include "Types.hpp"
-#include "Core/Log.hpp"
 #include "Core/Window.hpp"
 
 namespace Graphics {
@@ -40,6 +40,10 @@ namespace Graphics {
         void CreateGraphicsPipeline();
 
         void CreateCommandPool();
+
+        u32 FindMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
+        void CreateVertexBuffer();
+
         void AllocateCommandBuffers();
         void RecordCommandBuffer(VkCommandBuffer commandBuffer, u32 imageIndex);
 
@@ -69,6 +73,39 @@ namespace Graphics {
             std::vector<VkFramebuffer> Framebuffers;
         };
 
+        struct Vertex
+        {
+            glm::vec2 Pos;
+            glm::vec3 Color;
+
+            inline static VkVertexInputBindingDescription BindingDescription()
+            {
+                VkVertexInputBindingDescription description;
+                description.binding = 0;
+                description.stride = sizeof(Vertex);
+                description.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+                return description;
+            };
+
+            inline static std::array<VkVertexInputAttributeDescription, 2> AttributeDescription()
+            {
+                std::array<VkVertexInputAttributeDescription, 2> descriptions;
+
+                descriptions[0].location = 0;
+                descriptions[0].binding = 0;
+                descriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+                descriptions[0].offset = offsetof(Vertex, Pos);
+
+                descriptions[1].location = 1;
+                descriptions[1].binding = 0;
+                descriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+                descriptions[1].offset = offsetof(Vertex, Color);
+
+                return descriptions;
+            }
+        };
+
     private:
         std::shared_ptr<Window> m_Window;
 
@@ -91,6 +128,10 @@ namespace Graphics {
 
         VkPipelineLayout m_GraphicsPipelineLayout;
         VkPipeline m_GraphicsPipeline;
+
+        std::vector<Vertex> m_Vertices;
+        VkBuffer m_VertexBuffer;
+        VkDeviceMemory m_VertexBufferMemory;
 
         VkCommandPool m_CommandPool;
         std::array<VkCommandBuffer, s_FrameInFlight> m_CommandBuffers;

@@ -8,6 +8,8 @@
 #include <GLFW/glfw3.h>
 #include <GLFW/glfw3native.h>
 
+#include "Core/Log.hpp"
+
 #define VK_CHECK(fn) do { VkResult res_ = fn; if (res_ != VK_SUCCESS) { LOG_ERROR("VK_CHECK Failed: {}", #fn); } } while (false)
 
 namespace Graphics {
@@ -40,6 +42,14 @@ namespace Graphics {
         CreateGraphicsPipeline();
 
         CreateCommandPool();
+
+        m_Vertices = {
+            {{ 0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f }},
+            {{ 0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f }},
+            {{-0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f }}
+        };
+        CreateVertexBuffer();
+
         AllocateCommandBuffers();
 
         CreateSyncObjects();
@@ -54,6 +64,9 @@ namespace Graphics {
 			vkDestroySemaphore(m_Device, m_RenderFinishedSemphores[i], nullptr);
 			vkDestroySemaphore(m_Device, m_ImageAvailableSemaphores[i], nullptr);
         }
+
+        vkDestroyBuffer(m_Device, m_VertexBuffer, nullptr);
+        vkFreeMemory(m_Device, m_VertexBufferMemory, nullptr);
 
         vkDestroyCommandPool(m_Device, m_CommandPool, nullptr);
 
@@ -574,14 +587,17 @@ namespace Graphics {
 		dynamicState.dynamicStateCount = dynamicStates.size();
 		dynamicState.pDynamicStates = dynamicStates.data();
 
+        VkVertexInputBindingDescription bindingDescription = Vertex::BindingDescription();
+        std::array<VkVertexInputAttributeDescription, 2> attributeDescription = Vertex::AttributeDescription();
+
 		VkPipelineVertexInputStateCreateInfo vertexInputState;
 		vertexInputState.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 		vertexInputState.pNext = nullptr;
 		vertexInputState.flags = 0;
-		vertexInputState.vertexBindingDescriptionCount = 0;
-		vertexInputState.pVertexBindingDescriptions = nullptr;
-		vertexInputState.vertexAttributeDescriptionCount = 0;
-		vertexInputState.pVertexAttributeDescriptions = nullptr;
+		vertexInputState.vertexBindingDescriptionCount = 1;
+		vertexInputState.pVertexBindingDescriptions = &bindingDescription;
+		vertexInputState.vertexAttributeDescriptionCount = attributeDescription.size();
+		vertexInputState.pVertexAttributeDescriptions = attributeDescription.data();
 
 		VkPipelineInputAssemblyStateCreateInfo inputAssemblyState;
 		inputAssemblyState.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -709,6 +725,51 @@ namespace Graphics {
 		VK_CHECK(vkCreateCommandPool(m_Device, &createInfo, nullptr, &m_CommandPool));
     }
 
+    u32 Renderer::FindMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties)
+    {
+        VkPhysicalDeviceMemoryProperties memProperties;
+        vkGetPhysicalDeviceMemoryProperties(m_PhysicalDevice, &memProperties);
+
+        for (u32 i = 0; i < memProperties.memoryTypeCount; ++i) {
+            if ((typeFilter & (1 << i)) && ((memProperties.memoryTypes[i].propertyFlags & properties) == properties)) {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    void Renderer::CreateVertexBuffer()
+    {
+        VkBufferCreateInfo createInfo;
+        createInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        createInfo.pNext = nullptr;
+        createInfo.flags = 0;
+        createInfo.size = sizeof(m_Vertices[0]) * m_Vertices.size();
+        createInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+        createInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+        VK_CHECK(vkCreateBuffer(m_Device, &createInfo, nullptr, &m_VertexBuffer));
+
+        VkMemoryRequirements memRequirements;
+        vkGetBufferMemoryRequirements(m_Device, m_VertexBuffer, &memRequirements);
+
+        VkMemoryAllocateInfo allocInfo{};
+        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        allocInfo.pNext = nullptr;
+        allocInfo.allocationSize = memRequirements.size;
+        allocInfo.memoryTypeIndex = FindMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+        VK_CHECK(vkAllocateMemory(m_Device, &allocInfo, nullptr, &m_VertexBufferMemory));
+
+        vkBindBufferMemory(m_Device, m_VertexBuffer, m_VertexBufferMemory, 0);
+
+        void* data;
+        vkMapMemory(m_Device, m_VertexBufferMemory, 0, createInfo.size, 0, &data);
+        memcpy(data, m_Vertices.data(), createInfo.size);
+        vkUnmapMemory(m_Device, m_VertexBufferMemory);
+    }
+
     void Renderer::AllocateCommandBuffers()
     {
 		VkCommandBufferAllocateInfo allocInfo;
@@ -747,6 +808,10 @@ namespace Graphics {
 		vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
 		vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, m_GraphicsPipeline);
+
+        VkBuffer vertexBuffers[] = { m_VertexBuffer };
+        VkDeviceSize offsets[] = { 0 };
+        vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
 		VkViewport viewport;
 		viewport.x = 0.0f;
